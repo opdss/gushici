@@ -11,4 +11,12 @@ import scrapy
 class GushiciItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    author_url = scrapy.Field()
+    author_icon = scrapy.Field()
+    author_name = scrapy.Field()
+
+class AuthorItem(scrapy.Item):
+    pass
+
+class ArticleItem(scrapy.Item):
     pass
