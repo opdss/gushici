@@ -15,7 +15,7 @@ ROOT = os.path.split(os.path.realpath(__file__))[0]
 FPS = '{$}'
 
 start_urls = []
-for page in range(1, 6):
+for page in range(1, 317):
     start_urls.append('http://so.gushiwen.org/authors/Default.aspx?p=%d&c=' % page)
 
 def get_author_list(list_url):
@@ -42,22 +42,90 @@ def get_author_list(list_url):
             author_item.append(item)
         return author_item
     except Exception as e:
-        log('get_author_list: ' + list_url)
-        log(repr(e))
-        log(traceback.format_exc())
+        log('get_author_list: ' + list_url + ' : ' + str(e))
         return False
 
 #作者的详情页面地址抓取
 def get_author_ziliao_all(author_url):
-    data = []
-    html = requests.get(author_url).content
-    soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-    ziliao = soup.find_all('div', attrs={'id':re.compile(r"fanyi\d+")})
-    for x in ziliao:
-        id = x['id'][5:]
-        zl = get_ajax_info_by_id(int(id), 'ziliao')
-        data.append(zl)
-    return data
+    try:
+        data = []
+        html = requests.get(author_url).content
+        soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+        ziliao = soup.find_all('div', attrs={'id':re.compile(r"fanyi\d+")})
+        if ziliao:
+            for x in ziliao:
+                id = x['id'][5:]
+                zl = get_ajax_info_by_id(int(id), 'ziliao')
+                #等待一秒重试
+                if not zl:
+                    time.sleep(1)
+                    zl = get_ajax_info_by_id(int(id), 'ziliao')
+                if zl:
+                    data.append(zl)
+        return data
+    except Exception as e:
+        log('get_author_ziliao_all: ' + ' : ' + str(e))
+        return False
+
+#去除html标签
+def trip_tag(s, tag):
+    try:
+        tags = [str(tag)] if type(tag)!=type([]) else tag
+        for x in tags:
+            r = re.compile('<\/?' + x + '.*?>')
+            s = re.sub(r, '', s)
+        return s
+    except Exception as e:
+        log('trip_tag: %s ==> %s'%(s, tag))
+        return s
+
+
+
+def log(msg):
+    log_file = ROOT + '/gushici.log'
+    with open(log_file, 'a') as f:
+        f.write(msg + "\r\n")
+
+def mkdir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return True
+
+#根据id抓取ajax资料信息
+def get_ajax_info_by_id(id, tp):
+    try:
+        types = {'ziliao':'authors', 'fanyi':'shiwen2017', 'shangxi':'shiwen2017'}
+        if not types.has_key(tp):
+            raise Exception('tp is not exists: %s'%tp)
+        data = {'id':id, 'type':tp, 'title':'', 'content':'', 'description':''}
+        url = 'http://so.gushiwen.org/%s/ajax%s.aspx?id=%d'%(types[tp], tp, id)
+        html = requests.get(url).content
+        soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+        h2 = soup.find('h2')
+        if not h2:
+            raise Exception('get h2 error')
+        data['title'] = h2.get_text()
+        ps = soup.find('div', class_='contyishang').find_all('p')
+        contents = []
+        for p in ps:
+            contents.append(trip_tag(unicode(p), 'a'))
+        data['content'] = ''.join(contents)
+
+        cankao = soup.find('div', class_='cankao')
+        if cankao:
+            data['description'] = FPS.join(map(lambda x:x.get_text(), cankao.find_all('div')))
+        return data
+    except Exception as e:
+        log('get_ajax_info_by_id: ' + url + ' : ' + str(e))
+        return False
+
+def get_article_list_link_by_author(author_id, count):
+    page_number = 10
+    page_count = int(math.ceil(float(count)/float(page_number)))
+    start_urls = []
+    for page in range(1, page_count+1):
+        start_urls.append('http://so.gushiwen.org/authors/authorsw_%dA%d.aspx'%(int(author_id), page))
+    return start_urls
 
 #文章的详情页面地址抓取
 def get_article_info(article_url):
@@ -73,7 +141,11 @@ def get_article_info(article_url):
                 tp = re.sub(r'\d+', '', idr)
                 if tp == 'fanyi' or tp == 'shangxi':
                     info = get_ajax_info_by_id(int(idr[len(tp):]), tp)
-                    data.append(info)
+                    if not info:
+                        time.sleep(1)
+                        info = get_ajax_info_by_id(int(idr[len(tp):]), tp)
+                    if info:
+                        data.append(info)
             else:
                 h2 = x.find('h2')
                 if h2:
@@ -87,96 +159,47 @@ def get_article_info(article_url):
                     data.append(info)
         return data
     except Exception as e:
-        log(article_url)
-        log(repr(e))
-        log(traceback.format_exc())
+        log('get_article_info: ' + article_url + ' : ' + str(e))
         return False
-
-#去除html标签
-def trip_tag(s, tag):
-    tags = [str(tag)] if type(tag)!=type([]) else tag
-    for x in tags:
-        r = re.compile('<\/?' + x + '.*?>')
-        s = re.sub(r, '', s)
-    return s
-
-def log(msg):
-    log_file = ROOT + '/gushici.log'
-    with open(log_file, 'a') as f:
-        f.write(msg + "\r\n")
-
-#根据id抓取ajax资料信息
-def get_ajax_info_by_id(id, tp):
-    try:
-        types = {'ziliao':'authors', 'fanyi':'shiwen2017', 'shangxi':'shiwen2017'}
-        if not types.has_key(tp):
-            raise Exception('不存在的%s'%tp)
-        data = {'id':id, 'type':tp, 'title':'', 'content':'', 'description':''}
-        url = 'http://so.gushiwen.org/%s/ajax%s.aspx?id=%d'%(types[tp], tp, id)
-        html = requests.get(url).content
-        soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-        h2 = soup.find('h2')
-        if not h2:
-            raise Exception('%s抓取失败'%url)
-        data['title'] = h2.get_text()
-        ps = soup.find('div', class_='contyishang').find_all('p')
-        contents = []
-        for p in ps:
-            contents.append(trip_tag(unicode(p), 'a'))
-        data['content'] = ''.join(contents)
-
-        cankao = soup.find('div', class_='cankao')
-        if cankao:
-            data['description'] = FPS.join(map(lambda x:x.get_text(), cankao.find_all('div')))
-        return data
-    except Exception as e:
-        log(url)
-        log(repr(e))
-        log(traceback.format_exc())
-        return False
-
-def get_article_list_link_by_author(author_id, count):
-    page_number = 10
-    page_count = int(math.ceil(float(count)/float(page_number)))
-    start_urls = []
-    for page in range(1, page_count+1):
-        start_urls.append('http://so.gushiwen.org/authors/authorsw_%dA%d.aspx'%(int(author_id), page))
-    return start_urls
 
 #根据译注id获取 译注赏信息 yizhu_id
 def get_article_yizhushang(yizhu_id):
-    data = {}
-    url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yizhushang'%yizhu_id
-    html = requests.get(url).content
-    if len(html) == 0:
-        url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yizhu' % yizhu_id
+    try:
+        data = {}
+        url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yizhushang'%yizhu_id
         html = requests.get(url).content
-    soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-    body = unicode(soup).split('<div class="hr"></div>', 2)
-    body_0 = BeautifulSoup(body[0], 'html.parser')
-    data['yizhu'] = map(lambda x:x.get_text(FPS), body_0.find_all('p'))
-    data['shang'] = ''
-    data['cankao'] = []
-    data['yizhu_id'] = yizhu_id
-    if len(body) == 2:
-        div_shang = BeautifulSoup(body[1], 'html.parser')
-        div_cankao = div_shang.find_all('div')
-        if div_cankao:
-            data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')[:-1]))
-            data['cankao'] = FPS.join(map(lambda x:x.get_text(), div_cankao))
+        if len(html) == 0:
+            url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yizhu' % yizhu_id
+            html = requests.get(url).content
+        soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+        body = unicode(soup).split('<div class="hr"></div>', 2)
+        body_0 = BeautifulSoup(body[0], 'html.parser')
+        data['yizhu'] = map(lambda x:x.get_text(FPS), body_0.find_all('p'))
+        data['shang'] = ''
+        data['cankao'] = []
+        data['yizhu_id'] = yizhu_id
+        if len(body) == 2:
+            div_shang = BeautifulSoup(body[1], 'html.parser')
+            div_cankao = div_shang.find_all('div')
+            if div_cankao:
+                data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')[:-1]))
+                data['cankao'] = FPS.join(map(lambda x:x.get_text(), div_cankao))
+            else:
+                data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')))
         else:
-            data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')))
-    else:
-        div_cankao = body_0.find_all('div')
-        if div_cankao:
-            data['cankao'] = FPS.join(map(lambda x: x.get_text(), div_cankao))
-    return data
+            div_cankao = body_0.find_all('div')
+            if div_cankao:
+                data['cankao'] = FPS.join(map(lambda x: x.get_text(), div_cankao))
+        return data
+    except Exception as e:
+        log('get_article_yizhushang: ' + url + ' : ' + str(e))
+        return False
 
-def get_article_list(url):
+def get_articles_by_list(list_url):
     try:
         data = []
         domain = 'http://so.gushiwen.org'
-        html = requests.get(url).content
+        html = requests.get(list_url).content
         soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
         for div in soup.find_all('div', class_ = 'sons'):
             item = {}
@@ -189,9 +212,12 @@ def get_article_list(url):
             item['chaodai'] = cont_p_a[0].get_text()
             item['author'] = cont_p_a[1].get_text()
             contson = cont.find('div', class_='contson')
-            item['content'] = contson.extract()
-            #item['yizhu_id'] = int(contson['id'][7:])
-            item['yizhu'] = get_article_yizhushang(item['yizhu_id'])
+            item['content'] = trip_tag(unicode(contson), 'div')
+            item['yizhu_id'] = int(contson['id'][7:])
+            #获取译注信息
+            item['yizhushang'] = get_article_yizhushang(item['yizhu_id'])
+            #在文章详情获取赏析等信息
+            item['shangxi'] = get_article_info(item['article_url'])
             tag = div.find('div', class_='tag')
             item['tags'] = []
             if tag:
@@ -199,7 +225,7 @@ def get_article_list(url):
             data.append(item)
         return data
     except Exception as e:
-        log(e)
+        log('get_articles_by_list: ' + list_url + ' : ' + str(e))
         return False
 
 
@@ -208,85 +234,51 @@ class myThread(threading.Thread):  # 继承父类threading.Thread
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
+        self._acount = 0
+        self._start_time = time.time()
 
     def run(self):  # 把要执行的代码写到run函数里面 线程在创建后会直接运行run函数
+        print self.name + ' start time :' + time.strftime('%Y-%m-%d %H:%M:%S')
         while len(start_urls) != 0:
             start_url = start_urls.pop(0)
             self.get_author_article(start_url)
-            time.sleep(2)
-        print self.name + ' finish ！'
-
-    def get_authors(self, list_url):
-        url = 'http://so.gushiwen.org'
-        html = requests.get(list_url).content
-        soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-        for div in soup.find_all('div', class_ = 'sonspic'):
-            item = {}
-            href = div.p.a['href']
-            item['author_url'] = url + href
-            item['author_id'] = int(href.split('.')[0][8:])
-            item['author_name'] = div.p.a.get_text()
-            div_img = div.find('div', class_='divimg')
-            if div_img :
-                item['author_icon'] = div_img.img['src']
-            else:
-                item['author_icon'] = ''
-            other = div.find_all('p')[1]
-            item['description'] = other.get_text('|').split('|')[0]
-            item['start_url'] = url + other.a['href']
-            item['count'] = re.findall(r'\d+', other.a.get_text())[0]
-            yield item
+            time.sleep(1)
+        print self.name + ' finish : ' + str(self._acount) + ', exec time: ' + str(time.time()-self._start_time)
+        print self.name + ' end time :' + time.strftime('%Y-%m-%d %H:%M:%S')
 
     def get_author_article(self, start_url):
-        authors = self.get_authors(start_url)
+        authors = get_author_list(start_url)
         for author in authors:
-            data = {}
-            json_file = ROOT + '/json/author_' + str(author['author_id']) + '.json'
-            data['article'] = self.get_article(author)
+            path = ROOT + '/json/author_' + str(author['author_id'])
+            mkdir(path)
+            author_file = path + '/author.json'
+            #读取作者详情所有资料
             author['ziliao'] = get_author_ziliao_all(author['author_url'])
-            data['author'] = author
-            self.wjson(json_file, data)
+            self.wjson(author_file, author)
+            #time.sleep(1)
+            #读取所有文章
+            self.get_articles(author, path)
+            self._acount = self._acount + 1
             time.sleep(1)
-    def get_articles(self, author):
-        pass
 
-    def get_article(self, author):
+    def get_articles(self, author, path):
         urls = get_article_list_link_by_author(author['author_id'], author['count'])
-        articles = []
         for url in urls:
-            article = get_article_info(url)
-            articles.append(article)
+            article_list = get_articles_by_list(url)
+            for x in article_list:
+                file_name = path + '/' + url.split('/')[-1][:-5] + '_'+str(x['yizhu_id'])+'.json'
+                self.wjson(file_name, x)
             time.sleep(1)
-        return articles
 
     def wjson(self, filename, data):
         msg = json.dumps(data)
         with open(filename, 'a') as f:
             f.write(msg)
 
-def get_all_authors():
-    for list_url in start_urls:
-        url = 'http://so.gushiwen.org'
-        html = requests.get(list_url).content
-        soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-        for div in soup.find_all('div', class_ = 'sonspic'):
-            item = {}
-            href = div.p.a['href']
-            item['author_url'] = url + href
-            item['author_id'] = int(href.split('.')[0][8:])
-            item['author_name'] = div.p.a.get_text()
-            div_img = div.find('div', class_='divimg')
-            if div_img :
-                item['author_icon'] = div_img.img['src']
-            else:
-                item['author_icon'] = ''
-            other = div.find_all('p')[1]
-            item['description'] = other.get_text('|').split('|')[0]
-            item['start_url'] = url + other.a['href']
-            item['count'] = re.findall(r'\d+', other.a.get_text())[0]
-            yield item
 
 if __name__ == '__main__':
+    print get_ajax_info_by_id(1549, 'ziliao')
+    exit()
     tn = 5
     for i in range(1, tn+1):
         td = myThread(i, "Thread-"+str(i))
