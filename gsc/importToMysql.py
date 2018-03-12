@@ -5,6 +5,7 @@ import os
 import pymysql
 import json
 import sys
+import time
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -87,8 +88,11 @@ class myDb():
             self.__db.commit()
             return self.__cursor.lastrowid
         except Exception as e:
-            log(sql.encode('utf-8'))
-            log(str(e))
+            sql_file = ROOT + '/' + 'exec_error.sql'
+            tt = '##' + str(time.time())
+            log(tt, sql_file)
+            log(sql.encode('utf-8') + ';', sql_file)
+            log(tt + str(e))
             return False
 
     #data 数组或者字典
@@ -160,8 +164,18 @@ def read_file(file):
         log('file read error:' + file + str(e))
         return ''
 
+def get_file_json(file, type=''):
+    try:
+        with open(file) as fp:
+            contents = fp.read()
+        return json.loads(contents, encoding='utf-8')
+    except Exception as e:
+        log('get_file_json:'+file+' => ' + str(e))
+        return False
+
 if __name__ == '__main__':
-    db = myDb(host='119.27.170.117', user='prod', password='Wx24Fce&!3gHcnD', database='gushici')
+    #db = myDb(host='119.27.170.117', user='prod', password='Wx24Fce&!3gHcnD', database='gushici')
+    db = myDb(host='localhost', user='root', password='X7SBMixvFKLKUIL*a@cWX', database='gushici')
 
     author_dirs = get_author_dir(JSON_FILE)
 
@@ -175,7 +189,9 @@ if __name__ == '__main__':
         if author_file != 'author.json':
             log('author error: '+ author_dir)
             continue
-        author = json.loads(read_file(path + files[0]))
+        author = get_file_json(path + author_file)
+        if not author:
+            continue
         author_data = {
             'name' : author['author_name'],
             'description' : pymysql.escape_string(author['description'].strip("\n")),
@@ -194,7 +210,9 @@ if __name__ == '__main__':
         del(files[0])
         for file in files:
             article_file = path + file
-            article = json.loads(read_file(article_file))
+            article = get_file_json(article_file)
+            if not article:
+                continue
             article_data = {
                 'title' : article['article_name'],
                 'content' : pymysql.escape_string(article['content'].strip("\n")),
@@ -203,7 +221,15 @@ if __name__ == '__main__':
                 'dynasty' : article['chaodai'],
                 '_url' : article['article_url'],
                 '_yizhu_id' : article['yizhu_id'],
+                'shangxi' : '',
+                'yizhu' : '',
+                'cankao' : '',
             }
+            if article.has_key('yizhushang') and article['yizhushang']:
+                article_data['shangxi'] = pymysql.escape_string(article['yizhushang']['shang'].strip("\n"))
+                article_data['yizhu'] = pymysql.escape_string(';'.join(article['yizhushang']['yizhu']).strip("\n"))
+                article_data['cankao'] = pymysql.escape_string(article['yizhushang']['cankao'].strip("\n"))
+
             article_id = db.insert('articles', article_data)
             if not article_id:
                 log('insert article error:' + article_file)

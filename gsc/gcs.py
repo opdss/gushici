@@ -8,6 +8,9 @@ import math
 import time, threading
 import os
 import json
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 ROOT = os.path.split(os.path.realpath(__file__))[0]
 
@@ -161,47 +164,59 @@ def get_article_info(article_url):
 #根据译注id获取 译注赏信息 yizhu_id
 def get_article_yizhushang(yizhu_id, pre_url=''):
     try:
-        data = {'yizhu':[], 'shang':'', 'cankao':'', 'yizhu_id':yizhu_id, 'type':'yizhushang'}
-        url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yizhushang'%yizhu_id
+
+        data = {'yi':[], 'zhu':[], 'shang':'', 'cankao':'', 'yizhu_id':yizhu_id}
+        cankao = []
+        hr = '<p style=" color:#919090;margin:0px; font-size:12px;line-height:160%;">参考资料：</p>'
+
+        url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yi'%yizhu_id
         html = requests.get(url).content
-        if len(html) == 0:
-            data['type'] = 'yizhu'
-            url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yizhu' % yizhu_id
-            html = requests.get(url).content
-            if len(html) == 0:
-                data['type'] = 'yi'
-                url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=yi' % yizhu_id
-                html = requests.get(url).content
-                if len(html) == 0:
-                    data['type'] = 'zhu'
-                    url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=zhu' % yizhu_id
-                    html = requests.get(url).content
-                    if len(html) == 0:
-                        data['type'] = 'shang'
-                        url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=shang' % yizhu_id
-                        html = requests.get(url).content
-        if len(html) == 0:
-            #log('get_article_yizhushang::' + url + '::' + pre_url+'::'+str(yizhu_id))
-            return data
-        soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-        body = unicode(soup).split('<div class="hr"></div>', 2)
-        body_0 = BeautifulSoup(body[0], 'html.parser')
-        data['yizhu'] = map(lambda x:x.get_text(FPS), body_0.find_all('p'))
-        if len(body) == 2:
-            div_shang = BeautifulSoup(body[1], 'html.parser')
-            div_cankao = div_shang.find_all('div')
-            if div_cankao:
-                data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')[:-1]))
-                data['cankao'] = FPS.join(map(lambda x:x.get_text(), div_cankao))
+        ck = ''
+        if len(html) != 0:
+            soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+            body = unicode(soup).split(hr, 2)
+            if len(body) == 2:
+                data['yi'] = BeautifulSoup(body[0], 'html.parser').get_text()
             else:
-                data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')))
-        else:
-            div_cankao = body_0.find_all('div')
-            if div_cankao:
-                data['cankao'] = FPS.join(map(lambda x: x.get_text(), div_cankao))
-        return data
+                ps = soup.find_all('p')
+                data['yi'] = map(lambda x:x.get_text(FPS), ps)
+            cankao_div = soup.find_all('div')
+            if len(cankao_div) > 0:
+                ck = FPS.join(map(lambda x: x.find_all('span')[1].get_text(), cankao_div))
+        cankao.append(ck)
+
+        url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=zhu' % yizhu_id
+        html = requests.get(url).content
+        ck = ''
+        if len(html) != 0:
+            soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+            ps = soup.find_all('p')
+            cankao_div = soup.find_all('div')
+            if len(cankao_div) > 0:
+                ck = FPS.join(map(lambda x:x.find_all('span')[1].get_text(), cankao_div))
+                ps = ps[:-1]
+            data['zhu'] = map(lambda x: x.get_text(FPS), ps)
+        cankao.append(ck)
+
+        url = 'http://so.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=%d&value=shang' % yizhu_id
+        html = requests.get(url).content
+        ck = ''
+        if len(html) != 0:
+            soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+            body = unicode(soup).split('<div class="hr"></div>', 2)
+            if len(body) == 2:
+                div_shang = BeautifulSoup(body[1], 'html.parser')
+                div_cankao = div_shang.find_all('div')
+                if div_cankao:
+                    data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')[:-1]))
+                    ck = FPS.join(map(lambda x:x.find_all('span')[1].get_text(), div_cankao))
+                else:
+                    data['shang'] = ''.join(map(lambda x:unicode(x), div_shang.find_all('p')))
+        cankao.append(ck)
+        data['cankao'] = '{$$}'.join(cankao)
+        print json.dumps(data)
     except Exception as e:
-        log('get_article_yizhushang: ' + url + ' : ' + str(e))
+        log('get_article_yizhushang: ' + str(yizhu_id) + ' : ' + str(e))
         return False
 
 def get_articles_by_list(list_url):
