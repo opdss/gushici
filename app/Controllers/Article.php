@@ -7,6 +7,7 @@
  */
 namespace App\Controllers;
 
+use App\Models\Articles;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
@@ -21,7 +22,29 @@ class Article extends Api
 	 */
 	public function lists(Request $request, Response $response, $args)
 	{
+	    $page = (int)$request->getParam('p') ?: 1;
+	    $offset = (int)$request->getParam('offset') ?: 10;
 
+	    $json = array(
+	        'errCode' => 0,
+            'errMsg' => '',
+            'data' => []
+        );
+
+	    $pageInfo = array(
+	        'totalCount' => Articles::count(),
+            'currentPage' => $page,
+            'offset' => $offset
+        );
+
+        $res = Articles::limit($offset)->skip(($page-1)*$offset)->get();
+        $data = $res;
+
+        $json['data'] = array(
+            'pageInfo' => $pageInfo,
+            'records' => $data
+        );
+        return $response->withJson($json);
 	}
 
 	/**

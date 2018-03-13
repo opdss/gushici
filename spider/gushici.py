@@ -314,8 +314,6 @@ class myThread(threading.Thread):  # 继承父类threading.Thread
 
 if __name__ == '__main__':
 
-    print get_article_yizhushang(8468)
-    exit()
     for page in range(1, 317):
         start_urls.append('http://so.gushiwen.org/authors/Default.aspx?p=%d&c=' % page)
     tn = 8
