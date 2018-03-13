@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="author" content="<?php echo isset($comm['title']) ? $comm['author'] : ''; ?>">
+	<meta name="keyword" content="<?php echo isset($comm['keyword']) ? $comm['keyword'] : ''; ?>">
+	<meta name="description" content="<?php echo isset($comm['description']) ? $comm['description'] : ''; ?>">
+	<link rel="icon" href="/favicon.ico">
+	<title><?php echo isset($comm['title']) ? $comm['title'] : ''; ?></title>
+
+	<link href="/statics/css/root.css" rel="stylesheet">
+	<link href="/statics/css/style.css" rel="stylesheet">
+
+	<script src="/statics/js/jquery-3.2.1.min.js"></script>
+	<script src="/statics/js/main.js"></script>
+	<script src="/statics/js/md5.js"></script>
+</head>
+<body>
+<div class="container">
+	<div class="login-form">
+		<form  name="myForm">
+			<div class="top" style="padding: 10px">
+				<h3>ggg</h3>
+			</div>
+			<div class="form-area">
+				<div style="margin-top: -26px;color:red;text-align: center" class="errors">
+					<p>!{error}</p>
+				</div>
+				<div class="group">
+					<input type="text" class="form-control" placeholder="用户名"  name="username" required>
+					<i class="fa fa-user"></i>
+				</div>
+				<div class="group">
+					<input type="email" class="form-control"  placeholder="邮箱" name="email" required>
+					<i class="fa fa-envelope-o"></i>
+				</div>
+				<div class="group">
+					<input type="text" class="form-control"  placeholder="手机号"  name="mobile" required>
+					<i class="fa fa-envelope-o"></i>
+				</div>
+				<div class="group">
+					<input type="password" class="form-control" placeholder="密码" id="password" required>
+					<i class="fa fa-key"></i>
+				</div>
+				<div class="group">
+					<input type="password" class="form-control" placeholder="重复密码" id="repassword" required>
+					<i class="fa fa-key"></i>
+				</div>
+				<div class="group">
+					<div class="input-group">
+						<div class="input-group-addon">
+							<i class="fa fa-puzzle-piece"></i>
+						</div>
+						<input type="captcha" class="form-control" name="captcha" id="captcha"  placeholder="验证码" required>
+						<div class="input-group-addon" data-toggle="tooltip" data-placement="top" title="点击切换图片"
+							 style="padding:0px;margin: 0px;cursor: pointer;"><img id="captcha_img" style="margin: 0px;" onclick="reCapt(this)"/></div>
+					</div>
+				</div>
+				<button type="submit" style="background: #399bff;" class="btn btn-default btn-block">注册</button>
+			</div>
+		</form>
+		<div class="footer-links row">
+			<div class="col-xs-6"><a href="/login"><i class="fa fa-sign-in"></i> 登录</a></div>
+			<div class="col-xs-6 text-right"><a href="/forget"><i class="fa fa-lock"></i> 忘记密码</a></div>
+		</div>
+	</div>
+</div>
+
+<script>
+    reCapt('#captcha_img');
+    $('form#hasPwd').submit(function () {
+        var input = $('<input type="hidden" name="password">');
+        input.val(hex_md5($('#password').val()));
+        $(this).append(input);
+        return true;
+    });
+</script>
+<script type="text/javascript" color="255,0,0" opacity="0.6" count="128" src="/statics/js/canvas-nest.js"></script>
+</body>
+</html>

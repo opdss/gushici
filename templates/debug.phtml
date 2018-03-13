@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="author" content="<?php echo isset($comm['title']) ? $comm['author'] : ''; ?>">
+	<meta name="keyword" content="<?php echo isset($comm['keyword']) ? $comm['keyword'] : ''; ?>">
+	<meta name="description" content="<?php echo isset($comm['description']) ? $comm['description'] : ''; ?>">
+	<link rel="icon" href="/favicon.ico">
+	<title><?php echo isset($comm['title']) ? $comm['title'] : ''; ?></title>
+
+	<link href="/statics/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/statics/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/statics/css/style.css" rel="stylesheet">
+
+	<script src="/statics/js/jquery-3.2.1.min.js"></script>
+	<script src="/statics/js/main.js"></script>
+	<script src="/statics/js/bootstrap.min.js"></script>
+    <style>
+        .fa{
+            padding: 8px 8px;
+            background: #f2f2f2;
+        }
+        .fa:hover{
+            background: #dddddd;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+	<div class="col-md-6">
+		<div class="panel panel-default">
+			<div class="panel-title">
+				接口调试
+			</div>
+
+			<div class="panel-body">
+				<form class="form-horizontal" method="post">
+
+					<div class="form-group">
+						<label for="URL" class="col-sm-2 control-label form-label">URL</label>
+						<div class="col-sm-6">
+							<input type="text" class="form-control" value="http://sso.istimer.com" id="URL" name="url" readonly>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="app" class="col-sm-2 control-label form-label">应用</label>
+						<div class="col-sm-6">
+							<select class="form-control" name="appid" id="app">
+                                <?php foreach ($app as $item):?>
+								<option value="<?php echo $item['appid'];?>"><?php echo $item['appid'];?></option>
+                                <?php endforeach;?>
+							</select>
+						</div>
+					</div>
+
+                    <div class="form-group">
+                        <label for="method" class="col-sm-2 control-label form-label">方法</label>
+                        <div class="col-sm-6">
+                            <select class="form-control" name="method" id="method">
+								<?php foreach ($method as $item):?>
+                                    <option value="<?php echo $item;?>"><?php echo $item;?></option>
+								<?php endforeach;?>
+                            </select>
+                        </div>
+                    </div>
+
+					<div class="form-group">
+						<label for="api" class="col-sm-2 control-label form-label">接口</label>
+						<div class="col-sm-6">
+							<select class="form-control" name="api" id="api">
+								<?php foreach ($api as $item):?>
+                                    <option value="<?php echo $item['api'];?>"><?php echo $item['title'];?> (<?php echo $item['api'];?>)</option>
+								<?php endforeach;?>
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group param_div">
+						<label class="col-sm-2 control-label form-label">参数</label>
+						<div class="col-sm-10">
+							<div class="row">
+								<div class="col-sm-4">
+									<input type="text" name="name[]" class="form-control" value="" placeholder="Name">
+								</div>
+								<div class="col-sm-4">
+									<input type="text" name="value[]" class="form-control" value="" placeholder="Value">
+								</div>
+								<div class="col-sm-2">
+									<i class="fa fa-plus fa-lg" ></i>
+									<i class="fa fa-close fa-lg"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10">
+							<button type="submit" class="btn btn-default" id="submit">提交</button>
+						</div>
+					</div>
+
+				</form>
+
+			</div>
+
+		</div>
+	</div>
+    <div class="col-md-6">
+        <div class="panel panel-transparent">
+
+            <div class="panel-title">
+                调用结果
+                <span class="panel-tools" id="http_code" style="padding-right: 40px">
+                    <?php echo isset($response['http_code']) ? '('.$response['http_code'].')' : '';?>
+                </span>
+            </div>
+
+            <div class="panel-body">
+
+                <div role="tabpanel">
+
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs nav-line" role="tablist">
+                        <li role="presentation"><a href="#request_header" aria-controls="request_header" role="tab" data-toggle="tab">请求头</a></li>
+                        <li role="presentation"><a href="#response_header" aria-controls="response_header" role="tab" data-toggle="tab">响应头</a></li>
+                        <li role="presentation" class="active"><a href="#body" aria-controls="body" role="tab" data-toggle="tab">响应结果</a></li>
+                        <li role="presentation"><a href="#json" aria-controls="json" role="tab" data-toggle="tab">响应结果(json)</a></li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane" id="request_header">
+                            <pre><?php echo isset($response['request_header']) ? $response['request_header'] : '无';?></pre>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="response_header">
+                            <pre><?php echo isset($response['header']) ? $response['header'] : '无';?></pre>
+                        </div>
+                        <div role="tabpanel" class="tab-pane active" id="body">
+                            <pre><?php echo isset($response['body']) ? $response['body'] : '无';?></pre>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="json">
+                            <pre><?php echo isset($response['body']) ? $response['body'] : '无';?></pre>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+	var param_div = $('.param_div').clone();
+	$('body').on('click', '.fa-plus', function () {
+	    var self_param_div = $(this).parents('.param_div');
+	    self_param_div.after(param_div.clone());
+    })
+    $('body').on('click', '.fa-close', function () {
+        var self_param_div = $(this).parents('.param_div');
+        if ($('.param_div').length == 1) {
+            $('.param_div').find('input').val('');
+		} else {
+            self_param_div.remove();
+		}
+    })
+    var lock = false;
+    $('#submit').click(function () {
+        if (lock) {
+            return false;
+        }
+        lock = true;
+        var form = $(this).parents('form');
+        $.post('/debug', form.serialize(), function (res) {
+            lock = false;
+            if (res.errCode != 0) {
+                alert(res.errMsg);
+            } else {
+                $.each(res.data, function(k, v){
+                    $('#'+k).find('pre').html(v);
+                })
+                $('#http_code').html(res.data.http_code);
+            }
+        }, 'json');
+        return false;
+    });
+
+</script>
+</body>
+</html>
