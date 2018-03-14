@@ -239,7 +239,9 @@ if __name__ == '__main__':
                 continue
 
             if article.has_key('yizhushang') and article['yizhushang']:
-                import_yizhushang(article['yizhushang'], article_id)
+                yizhushang = article['yizhushang']
+                if yizhushang['yi'] != '' or yizhushang['yi'] != '' or yizhushang['yi'] != '':
+                    import_yizhushang(article['yizhushang'], article_id)
 
             if len(article['shangxi']) > 0:
                 import_ziliao_shangxi(article['shangxi'], article_id)

@@ -279,7 +279,6 @@ class myThread(threading.Thread):  # 继承父类threading.Thread
         while len(start_urls) != 0:
             start_url = start_urls.pop(0)
             self.get_author_article(start_url)
-            time.sleep(1)
         print self.name + ' finish : ' + str(self._acount) + ', exec time: ' + str(time.time()-self._start_time)
         print self.name + ' end time :' + time.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -295,7 +294,6 @@ class myThread(threading.Thread):  # 继承父类threading.Thread
             #读取所有文章
             self.get_articles(author, path)
             self._acount = self._acount + 1
-            time.sleep(1)
 
     def get_articles(self, author, path):
         urls = get_article_list_link_by_author(author['author_id'], author['count'])
@@ -314,7 +312,7 @@ class myThread(threading.Thread):  # 继承父类threading.Thread
 
 if __name__ == '__main__':
 
-    for page in range(1, 317):
+    for page in range(1, 324):
         start_urls.append('http://so.gushiwen.org/authors/Default.aspx?p=%d&c=' % page)
     tn = 8
     for i in range(1, tn+1):

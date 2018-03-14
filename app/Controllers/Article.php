@@ -24,6 +24,7 @@ class Article extends Api
 	{
 	    $page = (int)$request->getParam('p') ?: 1;
 	    $offset = (int)$request->getParam('offset') ?: 10;
+	    $kw = trim($request->getParam('kw')) ?: '';
 
 	    $json = array(
 	        'errCode' => 0,
@@ -31,13 +32,16 @@ class Article extends Api
             'data' => []
         );
 
+	    $builder = Articles::where('title', 'like', '%'.$kw.'%');
+
 	    $pageInfo = array(
-	        'totalCount' => Articles::count(),
+	        'totalCount' => $builder->count(),
             'currentPage' => $page,
-            'offset' => $offset
+            'offset' => $offset,
+			'kw' => $kw
         );
 
-        $res = Articles::limit($offset)->skip(($page-1)*$offset)->get();
+        $res = $builder->limit($offset)->skip(($page-1)*$offset)->get();
         $data = $res;
 
         $json['data'] = array(
