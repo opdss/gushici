@@ -11,7 +11,7 @@ use App\Models\Articles;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-class Article extends Api
+class Article extends Base
 {
 	/**
 	 * 古诗文列表
@@ -60,6 +60,10 @@ class Article extends Api
 	 */
 	public function detail(Request $request, Response $response, $args)
 	{
-
+		$id = intval($args['id']);
+		if (!$id || !$detail = Articles::find($id)) {
+			return $response->withStatus(404);
+		}
+		var_dump($detail->toArray());
 	}
 }

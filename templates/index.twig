@@ -1,0 +1,16 @@
+{% extends "layout.twig" %}
+
+{% block container %}
+    {% for item in articles %}
+        <div class="row text-center">
+            <div class="col-md-12">
+                <h3><a href="{{ path_for('page.article_detail', {'id':item['id']}) }}">{{ item['title'] }}</a></h3>
+                <small>{{ item['dynasty'] }}:<a href="{{ path_for('page.author_detail', {'id':item['author_id']}) }}">{{ item['author_name'] }}</a></small>
+                <p style="line-height: 32px;font-size: 16px">{{ item['content']|raw }}</p>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="row text-center">
+        {{ pagination|raw }}
+    </div>
+{% endblock %}

@@ -21,6 +21,7 @@
         "opdss/cisession": "*",
         "opdss/cicache": "*",
         "opdss/http": "*",
+        "slim/twig-view": "^2.1",
         "opdss/nroute": "*"
     },
     "require-dev": {

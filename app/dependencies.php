@@ -11,14 +11,14 @@ $capsule->setAsGlobal();
 $capsule->bootEloquent();
 $container['db'] = $capsule;
 
-/*$container['view'] = function ($c) {
-	$settings = \App\Libraries\Config::get('twig');
+$container['view'] = function ($c) {
+	$settings = $c->get('settings')['twig'];
 	$view = new \Slim\Views\Twig($settings['template_path'], $settings['options']);
 	//$basePath = rtrim(str_ireplace('index.php', '', $c['request']->getUri()->getBasePath()), '/');
 	$baseUrl = $c['request']->getUri()->getBaseUrl();
 	$view->addExtension(new Slim\Views\TwigExtension($c['router'], $baseUrl));
 	return $view;
-};*/
+};
 
 // monolog
 $container['logger'] = function ($c) {

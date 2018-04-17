@@ -9,11 +9,12 @@
 namespace App\Controllers;
 
 use App\Functions;
-use App\Models\Users;
+use App\Models\Articles;
+use App\Models\Authors;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-class Page extends Ctrl
+class Page extends Base
 {
 	/**
 	 * 首页
@@ -27,127 +28,98 @@ class Page extends Ctrl
 	 */
 	public function index(Request $request, Response $response, array $args)
 	{
-		if (!$this->session->userInfo) {
-			return $response->withRedirect($this->ci->router->pathFor('login'));
-		}
-		return var_export($this->session->get(), true);
+		return $this->articles($request, $response, $args);
 	}
 
 	/**
-	 * 登录页面
-	 * @pattern /login[/]
-	 * @method POST|GET
-	 * @name login
+	 *
+	 * @pattern /articles.html
 	 * @param Request $request
 	 * @param Response $response
 	 * @param array $args
+	 * @return Response
 	 */
-	public function login(Request $request, Response $response, array $args)
+	public function articles(Request $request, Response $response, array $args)
 	{
-		//已经登陆
-		if ($this->session->token) {
-			return $response->withRedirect($this->returnUrl($request->getQueryParam('appid')));
+		$page = (int)$request->getParam('p') ?: 1;
+		$number = (int)$request->getParam('number') ?: 10;
+		$kw = trim($request->getParam('kw')) ?: '';
+		$author_id = intval($request->getParam('author_id')) ?: '';
+
+		$builder = $kw ? Articles::where('title', 'like', '%'.$kw.'%') : new Articles();
+		//$builder = $kw ? Articles::where('title', 'like', '%'.$kw.'%') : Articles::where('author_id', $author_id);
+		if ($author_id) {
+			$builder = $builder->where('author_id', '=', $author_id);
 		}
 
-		$data = array(
-			'error' => '',
-			'need_captcha' =>  intval($this->session->get('try_login')) > 5 ? 1 : 0,
-		);
-		if ($request->getMethod() == 'POST') {
-			$username = $request->getParsedBodyParam('username');
-			$email = $request->getParsedBodyParam('email');
-			$password = $request->getParsedBodyParam('password');
-			$captcha = $request->getParsedBodyParam('captcha');
-			$verifyCaptcha = true;
-			if ($data['need_captcha']) {
-				if (empty($captcha) || $this->session->getFlashdata('captcha') != strtolower($captcha)) {
-					$data['error'] = '验证码输入错误';
-					$verifyCaptcha = false;
-				}
-			}
-			if ($verifyCaptcha) {
-				$user = Users::login(($username ?: $email), $password, !$username);
-				if ($user) {
-					//登陆成功之后的操作
-					$this->session->set('try_login', 0);
-					$this->session->token = $user['token'];
-					$this->session->userInfo = $user;
-					$this->tokenCache($user['token'], $user, 7200);
-					return $response->withRedirect($this->returnUrl($request->getQueryParam('appid')));
-				}
-				$try_login = intval($this->session->get('try_login'));
-				$this->session->set('try_login', $try_login + 1);
-				$data['error'] = '用户名或者密码错误';
-				$data['need_captcha'] = $try_login >= 5 ? 1 : 0;
-			}
-			$data = array_merge($data, $request->getParams());
-		}
-		return $this->ci->renderer->render($response, 'login.phtml', $data);
-	}
-
-	private function returnUrl($appid = '')
-	{
-		$url = '/';
-		if ($appid && isset($this->settings['sso'][$appid])) {
-			$appConf = $this->settings['sso'][$appid];
-			$user = $this->tokenCache($this->session->token);
-			$data = array(
-				't' => time(),
-				'token' => $user['token'],
-				'uid' => $user['uid'],
-				'username' => $user['username'],
-			);
-			$data['sign'] = Functions::sign($data, $appConf['appkey']);
-			$and = strpos($appConf['redirect'], '?') === false ? '?' : '&';
-			$url = $appConf['redirect'].$and.http_build_query($data);
-		}
-		return $url;
+		$res = $builder->limit($number)->skip(($page-1)*$number)->get();
+		$data['articles'] = $res ? $res->toArray() : array();
+		$data['pagination'] = $this->pagination($builder->count(), $number);
+		return $this->view('index.twig', $data);
 	}
 
 	/**
-	 * 退出页面
-	 * @pattern /logout[/]
-	 * @name logout
+	 *
+	 * @pattern /authors.html
+	 * @name index
 	 * @param Request $request
 	 * @param Response $response
 	 * @param array $args
+	 * @return Response
 	 */
-	public function logout(Request $request, Response $response, array $args)
+	public function authors(Request $request, Response $response, array $args)
 	{
-		if ($token = $request->getQueryParam('token')) {
-			$this->tokenCache($token, 'delete');
-		}
-		$this->session->destroy();
-		$url = $this->ci->router->pathFor('login');
-		if ($appid = $request->getQueryParam('appid')) {
-			$url.'?appid='.$appid;
-		}
-		return $response->withRedirect($url);
+		$page = (int)$request->getParam('p') ?: 1;
+		$number = (int)$request->getParam('number') ?: 10;
+		$kw = trim($request->getParam('kw')) ?: '';
+
+		$builder = $kw ? Authors::where('name', 'like', '%'.$kw.'%') : new Authors;
+
+		$res = $builder->limit($number)->skip(($page-1)*$number)->get();
+		$data['authors'] = $res ? $res->toArray() : array();
+		$data['pagination'] = $this->pagination($builder->count(), $number);
+		return $this->view('authors.twig', $data);
 	}
 
 	/**
-	 * 退出页面
-	 * @pattern /register[/]
+	 * @pattern /article/{id}.html
 	 * @param Request $request
 	 * @param Response $response
 	 * @param array $args
+	 * @return mixed
 	 */
-	public function register(Request $request, Response $response, array $args)
+	public function article_detail(Request $request, Response $response, array $args)
 	{
-		$data = array();
-		return $this->ci->renderer->render($response, 'register.phtml', $data);
+		$id = intval($args['id']);
+		if (!$id || !$detail = Articles::find($id)) {
+			return $response->withStatus(404);
+		}
+		$detail->documents;
+		$detail->author;
+		$data['title'] = $detail->title;
+		$data['detail'] = $detail->toArray();
+		return $this->view('article_detail.twig', $data);
 	}
 
+
 	/**
-	 * 退出页面
-	 * @pattern /forget[/]
+	 * @pattern /author/{id}.html
 	 * @param Request $request
 	 * @param Response $response
 	 * @param array $args
+	 * @return mixed
 	 */
-	public function forget(Request $request, Response $response, array $args)
+	public function author_detail(Request $request, Response $response, array $args)
 	{
+		$id = intval($args['id']);
+		if (!$id || !$detail = Authors::find($id)) {
+			return $response->withStatus(404);
+		}
+		$data['title'] = $detail->name;
+		$data['detail'] = $detail->toArray();
+		return $this->view('author_detail.twig', $data);
 	}
+
 
 	/**
 	 * 路由列表
@@ -239,51 +211,6 @@ class Page extends Ctrl
 			}
 		}
 		return $this->ci->renderer->render($response, 'debug.phtml', $data);
-	}
-
-	public function signups(Request $request, Response $response, array $args)
-	{
-		$captcha = $request->getParsedBodyParam('captcha', '');
-		if (empty($captcha) || !isset($_SESSION['captcha']) || $_SESSION['captcha'] != strtolower($captcha)) {
-			return $this->json(40114);
-		}
-		unset($_SESSION['captcha']);
-		$validator = new Validator($request->getParsedBody());
-		$validator
-			->required('%s不能为空')
-			->betweenlength(1, 32, '%s最大长度为32个字符')
-			->callback(function ($val) {
-				return !(bool)Users::where('username', $val)->count();
-			}, '此用户名已经存在')
-			->validate('username', '用户名');
-		$validator
-			->required('%s不能为空')
-			->betweenlength(6, 32, '%s长度6-32个字符')
-			->validate('password', '用户密码');
-		$validator
-			->required('%s不能为空')
-			->validate('mobile', '手机号');
-		$validator
-			->matches('password', 0, '两次密码不一致')
-			->validate('repassword', '用户密码');
-		$validator
-			->email('%s输出错误')
-			->validate('email', '邮箱');
-		// check for errors
-		if ($validator->hasErrors()) {
-			return $this->json(40001, $validator->getAllErrors());
-		}
-		$user = new Users();
-		foreach ($validator->getValidData() as $k => $v) {
-			if ($k == 'repassword') continue;
-			$user->$k = trim($v);
-		}
-		$user->password = password_hash($user->password, PASSWORD_DEFAULT);
-
-		if ($user->save()) {
-			return $this->json($user);
-		}
-		return $this->json(50000);
 	}
 
 }

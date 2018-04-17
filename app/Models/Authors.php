@@ -23,4 +23,6 @@ class Authors extends Base
 	 */
 	protected $primaryKey = 'id';
 
+	public $timestamps = false;
+
 }

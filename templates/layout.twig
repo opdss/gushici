@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="author" content="{{ author|default(site.author) }}">
+    <meta name="keyword" content="{{ keyword|default(site.keyword) }}">
+    <meta name="description" content="{{ description|default(site.description) }}">
+    <meta name="baidu-site-verification" content="4hTtFRZbky" />
+    <link rel="icon" href="#">
+
+    <title>{{ title }}</title>
+
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/sweetalert/1.1.3/sweetalert.min.css" rel="stylesheet">
+    {% for css in statics.css %}
+        <link href="{{ css }}" rel="stylesheet">
+    {% endfor %}
+    {% block css %}
+        {# 额外添加的css #}
+    {% endblock %}
+    <![endif]-->
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?350c4c4569fc42619d886791538e7d60";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+</head>
+<body>
+
+{% block navbar %}
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{{ base_url() }}">{{ site.title }}</a>
+            </div>
+
+            <div id="navbar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+
+                    <li class=""><a href="/articles.html">古诗词</a></li>
+                    <li class=""><a href="/authors.html">作者</a></li>
+                    {#<li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">留着 <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">参考用</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li class="dropdown-header">哈哈</li>
+                            <li><a href="#">说不定</a></li>
+                            <li><a href="#">用得上</a></li>
+                        </ul>
+                    </li>#}
+                </ul>
+
+                <form class="navbar-form navbar-right" method="get" action="">
+                    <input type="text" class="form-control" name="kw" placeholder="关键词">
+                </form>
+            </div><!--/.nav-collapse -->
+
+            {#<div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Settings</a></li>
+                    <li><a href="#">Profile</a></li>
+                    <li><a href="#">Help</a></li>
+                </ul>
+                <form class="navbar-form navbar-right">
+                    <input type="text" class="form-control" placeholder="Search...">
+                </form>
+            </div>#}
+        </div>
+    </nav>
+{% endblock %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 main">
+            {% block container %}
+                <div class="container-fluid" style="text-align: center;padding:20%"><h1>好像啥也没有。。。</h1></div>
+            {% endblock %}
+        </div>
+    </div>
+</div>
+
+{% block footer %}
+    <hr/>
+    <!-- 尾部start -->
+    <footer id="copyright" class="col-md-12 text-center">
+        <p>{{ site.copyright|raw }} | {{ site.icp|raw }} {#| 联系人：{{ site.contact|raw }}#}{# | 运行时间:{{ runtime }}#}</p>
+    </footer>
+    <!-- 尾部end -->
+{% endblock %}
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+{% for js in statics.js %}
+    <script src="{{ js }}"></script>
+{% endfor %}
+
+{% block script %}
+    {# js代码 #}
+{% endblock %}
+</body>
+</html>

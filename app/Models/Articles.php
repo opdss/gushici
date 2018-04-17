@@ -29,4 +29,9 @@ class Articles extends Base
         return $this->hasMany('\App\Models\Documents', 'map_id', 'id');
     }
 
+    public function author()
+	{
+		return $this->hasOne('\App\Models\Authors', 'id', 'author_id');
+	}
+
 }

@@ -1,0 +1,29 @@
+{% extends "layout.twig" %}
+
+{% block container %}
+    <div class="row">
+        <div class="col-md-12">
+            <h3>{{ detail['name'] }}</h3>
+            <p style="line-height: 32px;font-size: 16px">{{ detail['description']|raw }}
+            <a href="{{ path_for('page.articles') }}?author_id={{ detail['id'] }}">查看他的{{ detail['_count'] }}首古诗文</a>
+            </p>
+        </div>
+    </div>
+    {#<hr/>
+    {% for document in detail.documents %}
+        <div class="row">
+            <div class="col-md-12">
+                <h3>{{ document['title'] }}</h3>
+                <p style="line-height: 32px;font-size: 16px">{{ document['content']|raw }}</p>
+                <p style="line-height: 32px;font-size: 16px">{{ document['references']|raw }}</p>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3><a href="{{ path_for('page.author_detail', {'id':detail.author['id']}) }}">{{ detail.author['name'] }}</a></h3>
+            <p style="line-height: 32px;font-size: 16px">{{ detail.author['description']|raw }}</p>
+        </div>
+    </div>#}
+{% endblock %}

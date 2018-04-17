@@ -1,0 +1,19 @@
+{% extends "layout.twig" %}
+
+{% block container %}
+    {% for item in authors %}
+        <div class="row">
+            <div class="col-md-12">
+                <h3><a href="{{ path_for('page.author_detail', {'id':item['id']}) }}">{{ item['name'] }}</a></h3>
+                <div>
+                    <span><img class="inline" src="{{ item['icon'] }}"/></span>
+                    <span>{{ item['description']|raw }}</span>
+                    <a href="{{ path_for('page.articles') }}?author_id={{ item['id'] }}">查看他的{{ item['_count'] }}首古诗文</a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="row text-center">
+        {{ pagination|raw }}
+    </div>
+{% endblock %}

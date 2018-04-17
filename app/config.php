@@ -23,6 +23,27 @@ return array(
 		'template_path' => TPL_DIR,
 	],
 
+	'twig' => array(
+		'template_path' => TPL_DIR,
+		'options' => array(
+			'cache' => CACHE_DIR,
+			//'debug' => false,
+			'debug' => RUN_ENV == 'development' ? true : false,
+		)
+	),
+
+    'site' => array(
+		'title' => '中国古诗词',
+		'author' => 'isnoter.com',
+		'keyword' => '中国,古诗词,唐诗,宋词,元曲',
+		'description' => '中国古诗词网,古诗词,唐诗,宋词,元曲！',
+		//'copyright' => 'Copyright © 2017  istimer.com </br>技术支持：<a href="mailto:wux@tsingning.com" style="color: #2a76fe	;">@阿新</a>',
+		'page_number' => 6,
+		'copyright' => '©2018 <a href="http://www.1tools.net">isnoter.com</a>',
+		'icp' => '<a href="http://www.miibeian.gov.cn/">粤ICP备17068889号-2</a>',
+		'contact' => '<a href="mailto:opdss@qq.com">阿新</a>',
+	),
+
     'cache' => array(
         'handler' => 'redis',
         'host' => '127.0.0.1',

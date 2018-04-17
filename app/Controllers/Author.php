@@ -21,7 +21,8 @@ class Author extends Api
 	 */
 	public function lists(Request $request, Response $response, $args)
 	{
-
+		//$res = \App\Models\Authors::select(array('id','_icon'))->where('_icon','!=', '')->get()->toArray();
+		//$r = \App\Libraries\File::writeRetPhp(CACHE_DIR.'icon.php', $res);
 	}
 
 	/**

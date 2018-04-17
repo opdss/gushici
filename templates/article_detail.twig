@@ -1,0 +1,28 @@
+{% extends "layout.twig" %}
+
+{% block container %}
+    <div class="row text-center">
+        <div class="col-md-12">
+            <h3>{{ detail['title'] }}</h3>
+            <small>{{ detail['dynasty'] }}:<a href="{{ path_for('page.author_detail', {'id':detail.author['id']}) }}">{{ detail['author_name'] }}</a></small>
+            <p style="line-height: 32px;font-size: 16px">{{ detail['content']|raw }}</p>
+        </div>
+    </div>
+    <hr/>
+    {% for document in detail.documents %}
+        <div class="row">
+            <div class="col-md-12">
+                <h3>{{ document['title'] }}</h3>
+                <p style="line-height: 32px;font-size: 16px">{{ document['content']|raw }}</p>
+                <p style="line-height: 32px;font-size: 16px">{{ document['references']|raw }}</p>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3><a href="{{ path_for('page.author_detail', {'id':detail.author['id']}) }}">{{ detail.author['name'] }}</a></h3>
+            <p style="line-height: 32px;font-size: 16px">{{ detail.author['description']|raw }}</p>
+        </div>
+    </div>
+{% endblock %}
