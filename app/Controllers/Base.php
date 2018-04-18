@@ -128,6 +128,6 @@ class Base
 
 
 		$pagination = new Pagination($total, $pageSize);
-		return $pagination->setTemp($temp)->setConfig($config)->fpage(array( 3, 4, 5, 6, 7));
+		return $pagination->setTemp($temp)->setConfig($config)->fpage(array(3, 4, 5, 6, 7));
 	}
 }

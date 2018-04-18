@@ -27,9 +27,9 @@ class Pagination {
     );
 
     public $temp = array(
-        //0 => '&nbsp;共有<b>{#total}</b>个记录&nbsp;',
-        //1 => '&nbsp;每页显示<b>{#pageSize}</b>条，本页<b>{#start}-{#end}</b>条&nbsp;',
-        //2 => '&nbsp;<b>{#page}/{#pageTotal}</b>页&nbsp;',
+        0 => '&nbsp;共有<b>{#total}</b>个记录&nbsp;',
+        1 => '&nbsp;每页显示<b>{#pageSize}</b>条，本页<b>{#start}-{#end}</b>条&nbsp;',
+        2 => '&nbsp;<b>{#page}/{#pageTotal}</b>页&nbsp;',
         'list_active' => '&nbsp;<a href="#">{#page}</a>&nbsp;', //分页列表没有链接模版
         'list_not_active' => '&nbsp;<a href="{#url}">{#page}</a>&nbsp;',//分页列表有链接模版
         'fl_active' => '&nbsp;<a href="{#url}">{#title}</a>&nbsp;', //首页尾页有链接模版

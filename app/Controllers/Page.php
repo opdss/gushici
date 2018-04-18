@@ -51,10 +51,11 @@ class Page extends Base
 		if ($author_id) {
 			$builder = $builder->where('author_id', '=', $author_id);
 		}
+		$count = $builder->count();
 
 		$res = $builder->limit($number)->skip(($page-1)*$number)->get();
 		$data['articles'] = $res ? $res->toArray() : array();
-		$data['pagination'] = $this->pagination($builder->count(), $number);
+		$data['pagination'] = $this->pagination($count, $number);
 		return $this->view('index.twig', $data);
 	}
 
