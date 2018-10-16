@@ -14,7 +14,7 @@ class Author extends Api
 {
 	/**
 	 * 古诗人列表
-	 * @pattern /authors
+	 * @pattern /authorsssss
 	 * @param Request $request
 	 * @param Response $response
 	 * @param $args
@@ -27,7 +27,7 @@ class Author extends Api
 
 	/**
 	 * 古诗人详情
-	 * @pattern /author/{id}
+	 * @pattern /authorsss/{id}
 	 * @param Request $request
 	 * @param Response $response
 	 * @param $args
